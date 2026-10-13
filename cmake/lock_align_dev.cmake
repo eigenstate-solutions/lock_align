@@ -41,6 +41,10 @@ function(lock_align_dev_target target)
   # with --compile-no-warning-as-error.
   set_target_properties(${target} PROPERTIES COMPILE_WARNING_AS_ERROR
                                              ${LOCK_ALIGN_WARNINGS_AS_ERRORS})
+  get_target_property(type ${target} TYPE)
+  if(MSVC AND type STREQUAL "EXECUTABLE")
+    target_sources(${target} PRIVATE ${PROJECT_SOURCE_DIR}/cmake/no_error_dialogs.cpp)
+  endif()
 
   if(NOT lock_align_sanitizers)
     return()

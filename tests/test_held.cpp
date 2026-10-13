@@ -21,8 +21,9 @@ using namespace lock_align;
 using namespace lock_align_test;
 
 // Well past the reserved slots, so the record has moved to the heap and grown
-// more than once.
-constexpr std::size_t many = 4 * held_slots_reserved + 3;
+// more than once. At least 5, even with no slots reserved, so that a test can
+// release every other entry and then the newest and still hold some.
+constexpr std::size_t many = 4 * held_slots_reserved + 5;
 
 TEST_CASE("a thread may hold more entries than are reserved", "[held]") {
   ordered_mutex<std::recursive_mutex, 2> r;
@@ -54,6 +55,7 @@ TEST_CASE("entries past the reserved ones can be released in any order", "[held]
   bool drop = true;
   for (auto it = owed.begin(); it != owed.end(); drop = !drop) it = drop ? owed.erase(it) : std::next(it);
   CHECK(held_count() == owed.size());
+  REQUIRE(owed.size() >= 2);
   owed.pop_back();
   CHECK(current_level() == owed.back().level());
   owed.clear();

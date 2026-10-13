@@ -16,7 +16,7 @@ expect_program(abort_policy
   EXPECT_FAILURE)
 expect_program(log_policy
   "lock_align: lock order violation: blocking on mutex 'low'[^\n]*\nwent ahead holding 2")
-# The message is the uncaught exception's what(), as std::terminate prints it.
+# The program's terminate handler prints the uncaught exception's what().
 expect_program(notify_in_destructor
-  "missing obligation: notifying 'ready' \\(level 1\\) without holding its obligation"
+  "terminated by: missing obligation: notifying 'ready' \\(level 1\\) without holding its obligation"
   EXPECT_FAILURE)
