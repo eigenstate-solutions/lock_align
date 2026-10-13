@@ -20,6 +20,8 @@
 #include "lock_align/level.hpp"
 #include "lock_align/violation.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 // Whether a condition variable, latch or promise reports a thread that
@@ -134,3 +136,5 @@ void check_wait(L level, std::string_view name = {},
 }
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

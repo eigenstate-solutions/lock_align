@@ -9,6 +9,8 @@
 #include "lock_align/config.hpp"
 #include "lock_align/detail/config_guard.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI::detail {
 
 inline std::string location_name(const std::source_location& where) {
@@ -65,3 +67,5 @@ struct name_access {
 };
 
 }  // namespace lock_align::detail
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

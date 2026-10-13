@@ -1,13 +1,10 @@
 // Names are only built when asked for, so a resource with a default name
 // doesn't allocate; nor does a promise's obligation token.
 
-#include <atomic>
 #include <catch2/catch_test_macros.hpp>
 #include <condition_variable>
-#include <cstdlib>
 #include <future>
 #include <mutex>
-#include <new>
 #include <source_location>
 #include <string>
 #include <utility>
@@ -20,23 +17,14 @@
 #include "lock_align/ordered_thread.hpp"
 #include "lock_align/violation.hpp"
 #include "held_listener.hpp"
+#include "replaced_new.hpp"
 #include "test_support.hpp"
 
 using namespace lock_align;
 using namespace lock_align_test;
 
-// Counts every allocation in this test program.
-static std::atomic<long> allocations{0};
-
-void* operator new(std::size_t size) {
-  ++allocations;
-  if (void* p = std::malloc(size == 0 ? 1 : size)) return p;
-  throw std::bad_alloc();
-}
-void operator delete(void* p) noexcept { std::free(p); }
-void operator delete(void* p, std::size_t) noexcept { std::free(p); }
-
 TEST_CASE("resources with default names don't allocate", "[names]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   // libc++'s std::condition_variable_any allocates; that isn't ours.
   long baseline = allocations;
   { std::condition_variable_any plain; }
@@ -58,6 +46,7 @@ TEST_CASE("resources with default names don't allocate", "[names]") {
 }
 
 TEST_CASE("a promise allocates no more than std::promise", "[names][promise]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   long baseline = allocations;
   { std::promise<int> plain; }
   baseline = allocations - baseline;

@@ -1,7 +1,5 @@
-#include <atomic>
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
-#include <cstdlib>
 #include <iterator>
 #include <list>
 #include <memory>
@@ -16,26 +14,11 @@
 #include "lock_align/obligation.hpp"
 #include "lock_align/ordered_mutex.hpp"
 #include "held_listener.hpp"
+#include "replaced_new.hpp"
 #include "test_support.hpp"
 
 using namespace lock_align;
 using namespace lock_align_test;
-
-// Lets a test make the next allocation fail.
-static std::atomic<bool> fail_next_allocation{false};
-
-void* operator new(std::size_t size) {
-  if (fail_next_allocation.exchange(false)) throw std::bad_alloc();
-  if (void* p = std::malloc(size == 0 ? 1 : size)) return p;
-  throw std::bad_alloc();
-}
-void operator delete(void* p) noexcept { std::free(p); }
-void operator delete(void* p, std::size_t) noexcept { std::free(p); }
-// The record grows with new[]. Sanitizers supply their own array forms, which
-// wouldn't go through the ones above, so these are replaced too.
-void* operator new[](std::size_t size) { return operator new(size); }
-void operator delete[](void* p) noexcept { std::free(p); }
-void operator delete[](void* p, std::size_t) noexcept { std::free(p); }
 
 // Well past the reserved slots, so the record has moved to the heap and grown
 // more than once.
@@ -105,6 +88,7 @@ std::list<obligation> fill_reserved_slots() {
 }  // namespace
 
 TEST_CASE("a failed growth leaves the mutex unlocked", "[held]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   std::list<obligation> owed = fill_reserved_slots();
   ordered_mutex<std::mutex, 1> m;
   bool threw = false;
@@ -128,6 +112,7 @@ TEST_CASE("a failed growth leaves the mutex unlocked", "[held]") {
 }
 
 TEST_CASE("a failed growth fails try_lock and taking an obligation", "[held]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   std::list<obligation> owed = fill_reserved_slots();
   ordered_mutex<std::mutex, 1> m;
   bool try_lock_threw = false;

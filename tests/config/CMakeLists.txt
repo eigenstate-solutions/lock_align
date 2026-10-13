@@ -1,12 +1,15 @@
 # Programs built from two files with different configurations, to check that
 # lock_align notices. main.cpp and other.cpp each get the definitions given.
 function(config_program name)
-  cmake_parse_arguments(ARG "NO_TEST" "" "MAIN;OTHER" ${ARGN})
-  add_library(${name}_other OBJECT other.cpp)
+  cmake_parse_arguments(ARG "NO_TEST;EXCLUDE_FROM_ALL" "" "MAIN;OTHER" ${ARGN})
+  if(ARG_EXCLUDE_FROM_ALL)
+    set(exclude EXCLUDE_FROM_ALL)
+  endif()
+  add_library(${name}_other OBJECT ${exclude} other.cpp)
   target_link_libraries(${name}_other PRIVATE lock_align::lock_align)
   target_compile_definitions(${name}_other PRIVATE ${ARG_OTHER})
   lock_align_dev_target(${name}_other)
-  add_executable(${name} main.cpp $<TARGET_OBJECTS:${name}_other>)
+  add_executable(${name} ${exclude} main.cpp $<TARGET_OBJECTS:${name}_other>)
   target_link_libraries(${name} PRIVATE lock_align::lock_align)
   target_compile_definitions(${name} PRIVATE ${ARG_MAIN})
   lock_align_dev_target(${name})
@@ -21,16 +24,29 @@ config_program(same_configuration)
 set_tests_properties("config: same_configuration" PROPERTIES PASS_REGULAR_EXPRESSION "^ran")
 
 # These abort, which ctest counts as a failure whatever they print, so a
-# script checks their output instead.
+# script checks their output instead. With LAYOUT, the two files' layouts
+# differ, which MSVC's linker (and clang-cl's) refuses to link, so there the
+# test builds the program and expects that instead; it's left out of the
+# normal build.
 function(expect_mismatch name)
-  config_program(${name} NO_TEST ${ARGN})
-  add_test(NAME "config: ${name} is reported"
-           COMMAND ${CMAKE_COMMAND} -DPROGRAM=$<TARGET_FILE:${name}> "-DEXPECT=${mismatch}"
-                   -P ${PROJECT_SOURCE_DIR}/tests/expect_output.cmake)
+  cmake_parse_arguments(ARG "LAYOUT" "" "" ${ARGN})
+  if(ARG_LAYOUT AND MSVC)
+    config_program(${name} NO_TEST EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
+    add_test(NAME "config: ${name} doesn't link"
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${name})
+    set_tests_properties("config: ${name} doesn't link" PROPERTIES
+      PASS_REGULAR_EXPRESSION "mismatch detected for 'lock_align_layout'"
+      RESOURCE_LOCK build_dir)
+  else()
+    config_program(${name} NO_TEST ${ARG_UNPARSED_ARGUMENTS})
+    add_test(NAME "config: ${name} is reported"
+             COMMAND ${CMAKE_COMMAND} -DPROGRAM=$<TARGET_FILE:${name}> "-DEXPECT=${mismatch}"
+                     -P ${PROJECT_SOURCE_DIR}/tests/expect_output.cmake)
+  endif()
 endfunction()
 
-expect_mismatch(mixed_disable OTHER LOCK_ALIGN_DISABLE)
-expect_mismatch(mixed_slots OTHER LOCK_ALIGN_HELD_SLOTS_RESERVED=8)
+expect_mismatch(mixed_disable LAYOUT OTHER LOCK_ALIGN_DISABLE)
+expect_mismatch(mixed_slots LAYOUT OTHER LOCK_ALIGN_HELD_SLOTS_RESERVED=8)
 expect_mismatch(mixed_policy OTHER LOCK_ALIGN_DEFAULT_POLICY=::lock_align::log_on_violation)
 expect_mismatch(mixed_obligation_check OTHER LOCK_ALIGN_DEFAULT_OBLIGATION_CHECK=unchecked)
 

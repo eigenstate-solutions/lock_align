@@ -9,6 +9,8 @@
 #include "lock_align/detail/held_stack.hpp"
 #include "lock_align/level.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 // Highest level this thread holds (mutex or obligation), or 0 if none.
@@ -21,3 +23,5 @@ inline level_t current_level() noexcept {
 inline std::size_t held_count() noexcept { return detail::held.size(); }
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

@@ -176,7 +176,7 @@ TEST_CASE("a task may start under an obligation its worker owes", "[task_scope]"
   ordered_mutex<std::mutex, 2> high;
   std::atomic<int> ok{0};
   ordered_thread worker(1, "worker", [&] {
-    task_scope task;
+    task_scope<> task;  // MSVC fails to deduce the arguments here (C3538)
     // The worker's obligation still constrains the task.
     if (throws_order_error([&] { std::lock_guard g(low); })) ++ok;
     if (!throws_order_error([&] { std::lock_guard g(high); })) ++ok;

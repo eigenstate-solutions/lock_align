@@ -19,6 +19,8 @@
 #include "lock_align/level.hpp"
 #include "lock_align/ordered_mutex.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 namespace detail {
@@ -164,3 +166,5 @@ class ordered_scoped_lock : public detail::scoped_lock_types<M...> {
 };
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

@@ -4,15 +4,12 @@
 #error "test_disabled.cpp is built with LOCK_ALIGN_DISABLE defined"
 #endif
 
-#include <atomic>
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
 #include <condition_variable>
-#include <cstdlib>
 #include <future>
 #include <latch>
 #include <mutex>
-#include <new>
 #include <shared_mutex>
 #include <type_traits>
 #include <utility>
@@ -27,19 +24,10 @@
 #include "lock_align/ordered_thread.hpp"
 #include "lock_align/task_scope.hpp"
 #include "held_listener.hpp"
+#include "replaced_new.hpp"
 
 using namespace lock_align;
-
-// Counts every allocation in this test program.
-static std::atomic<long> allocations{0};
-
-void* operator new(std::size_t size) {
-  ++allocations;
-  if (void* p = std::malloc(size == 0 ? 1 : size)) return p;
-  throw std::bad_alloc();
-}
-void operator delete(void* p) noexcept { std::free(p); }
-void operator delete(void* p, std::size_t) noexcept { std::free(p); }
+using namespace lock_align_test;
 
 static_assert(sizeof(ordered_mutex<std::mutex, 1>) == sizeof(std::mutex));
 static_assert(sizeof(ordered_mutex<std::shared_mutex, 1>) == sizeof(std::shared_mutex));
@@ -89,6 +77,7 @@ TEST_CASE("signalling without an obligation is not checked", "[disabled]") {
 }
 
 TEST_CASE("a promise allocates no more than std::promise", "[disabled]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   const long before = allocations.load();
   { std::promise<int> plain; }
   const long plain = allocations.load() - before;
@@ -97,6 +86,7 @@ TEST_CASE("a promise allocates no more than std::promise", "[disabled]") {
 }
 
 TEST_CASE("names are neither built nor stored", "[disabled]") {
+  if (!replaced_new) SKIP(no_replaced_new);
   bool names_empty = false;
   const long before = allocations.load();
   {

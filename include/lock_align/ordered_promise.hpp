@@ -22,6 +22,8 @@
 #include "lock_align/obligation.hpp"
 #include "lock_align/violation.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 template <class T, class Policy, obligation_check Check>
@@ -160,3 +162,5 @@ class ordered_promise {
 };
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

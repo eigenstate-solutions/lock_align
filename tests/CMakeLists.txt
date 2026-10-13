@@ -8,13 +8,14 @@ endif()
 
 include(FetchContent)
 
-# Use an installed Catch2 if there is one; otherwise download this release.
+# Use an installed Catch2 if there is one, 3.3 or newer for SKIP; otherwise
+# download this release.
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG v3.16.1
   GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS 3)
+  FIND_PACKAGE_ARGS 3.3)
 FetchContent_MakeAvailable(Catch2)
 
 include(Catch)
@@ -49,6 +50,10 @@ function(lock_align_test name)
   add_executable(${target} ${name}.cpp)
   target_link_libraries(${target} PRIVATE lock_align::lock_align Catch2::Catch2WithMain)
   target_compile_definitions(${target} PRIVATE ${ARG_DEFINITIONS})
+  if(NOT LOCK_ALIGN_SANITIZE STREQUAL "")
+    # replaced_new.hpp leaves the allocator to the sanitizer.
+    target_compile_definitions(${target} PRIVATE LOCK_ALIGN_TEST_SANITIZED)
+  endif()
   lock_align_dev_target(${target})
   catch_discover_tests(${target} TEST_PREFIX "${prefix}: ")
 endfunction()

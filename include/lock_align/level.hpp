@@ -15,6 +15,8 @@
 #include "lock_align/config.hpp"
 #include "lock_align/detail/config_guard.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 using level_t = std::uint32_t;
@@ -87,3 +89,5 @@ constexpr bool is_obligation(rank_t rank) noexcept { return (rank & 1) != 0; }
 }  // namespace detail
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

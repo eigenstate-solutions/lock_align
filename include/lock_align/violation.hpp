@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -12,6 +13,8 @@
 #include "lock_align/detail/config_guard.hpp"
 #include "lock_align/level.hpp"
 #include "lock_align/violation_fwd.hpp"
+
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
 
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
@@ -253,7 +256,12 @@ inline void missing_obligation_violation::throw_error() const {
 // accepts each violation class: one on_violation(const violation&) is
 // enough. If it returns, the blocking operation (or task) goes ahead anyway.
 struct throw_on_violation {
-  [[noreturn]] static void on_violation(const violation& v) { v.throw_error(); }
+  [[noreturn]] static void on_violation(const violation& v) {
+    v.throw_error();
+    // [[noreturn]] doesn't bind an override, so a violation class that
+    // returned from throw_error would otherwise return from here.
+    std::terminate();
+  }
 };
 
 struct abort_on_violation {
@@ -302,3 +310,5 @@ inline constexpr bool compare_defaults = true;
 }  // namespace
 }  // namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI::detail
 #endif
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

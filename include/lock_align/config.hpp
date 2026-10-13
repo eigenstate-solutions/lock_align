@@ -80,8 +80,23 @@
 #define LOCK_ALIGN_DETAIL_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
-// MSVC's linker reports object files built with different layouts.
+// Brackets each header's code. Once the optimizer inlines a policy that
+// always throws, MSVC warns that the code after the call is unreachable
+// (C4702), in the header, at the warning level many projects build with. MSVC
+// applies the warning state in effect where a function is defined, so turning
+// it off around the header's own code is enough, and the pop leaves the
+// including file's state as it was.
 #ifdef _MSC_VER
+#define LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS __pragma(warning(push)) __pragma(warning(disable : 4702))
+#define LOCK_ALIGN_DETAIL_RESTORE_WARNINGS __pragma(warning(pop))
+#else
+#define LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+#define LOCK_ALIGN_DETAIL_RESTORE_WARNINGS
+#endif
+
+// MSVC's linker reports object files built with different layouts, unless
+// the file opts out of the configuration checks.
+#if defined(_MSC_VER) && !defined(LOCK_ALIGN_NO_CONFIG_CHECK)
 #pragma detect_mismatch("lock_align_layout", LOCK_ALIGN_DETAIL_STR(LOCK_ALIGN_DETAIL_ABI))
 #endif
 

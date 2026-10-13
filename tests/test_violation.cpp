@@ -10,6 +10,12 @@
 #include "lock_align/violation.hpp"
 #include "held_listener.hpp"
 
+// The calls to throw_error are [[noreturn]], so MSVC finds the code Catch puts
+// after them in CHECK_THROWS_AS unreachable.
+#ifdef _MSC_VER
+#pragma warning(disable : 4702)
+#endif
+
 using namespace lock_align;
 
 static_assert(std::is_abstract_v<violation>);

@@ -23,6 +23,8 @@
 #include "lock_align/config.hpp"
 #include "lock_align/detail/config_guard.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::config_detail {
 
 // T's name as the compiler spells it, so that two spellings of one type
@@ -98,3 +100,5 @@ inline void register_configuration(const configuration& c) noexcept {
 }
 
 }  // namespace lock_align::config_detail
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS

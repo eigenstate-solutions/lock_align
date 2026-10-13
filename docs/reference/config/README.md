@@ -139,7 +139,8 @@ Like the other macros, define it the same way in every translation unit.
 #define LOCK_ALIGN_NO_CONFIG_CHECK
 ```
 
-Leaves this file out of the [startup check](#the-startup-check). Define it
+Leaves this file out of the [startup check](#the-startup-check), and on
+MSVC out of the linker's check of layouts. Define it
 if your project forbids static initializers in headers, as Clang's
 `-Wglobal-constructors` does, or if you knowingly build some files with a
 different configuration and those files share no types with the rest.
@@ -210,8 +211,9 @@ Undefined symbols: "use_mutex(lock_align::v1_on_s32::ordered_mutex<std::mutex, 1
 Don't name the inline namespace, and don't declare anything in
 `lock_align` yourself; include the headers instead.
 
-On MSVC, the linker also reports object files with different layouts
-(`LNK2038`), using `#pragma detect_mismatch`.
+On MSVC, the linker also refuses to link object files with different
+layouts (`LNK2038`), using `#pragma detect_mismatch`, unless they define
+[`LOCK_ALIGN_NO_CONFIG_CHECK`](#lock_align_no_config_check).
 
 ### The startup check
 

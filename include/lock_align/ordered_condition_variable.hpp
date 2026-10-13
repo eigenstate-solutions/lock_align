@@ -21,6 +21,8 @@
 #include "lock_align/ordered_mutex.hpp"
 #include "lock_align/violation.hpp"
 
+LOCK_ALIGN_DETAIL_SUPPRESS_WARNINGS
+
 namespace lock_align::inline LOCK_ALIGN_DETAIL_ABI {
 
 namespace detail {
@@ -139,3 +141,5 @@ class ordered_condition_variable {
 };
 
 }  // namespace lock_align
+
+LOCK_ALIGN_DETAIL_RESTORE_WARNINGS
