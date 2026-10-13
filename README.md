@@ -106,7 +106,7 @@ use. With CMake 3.21 or newer:
 include(FetchContent)
 FetchContent_Declare(lock_align
   GIT_REPOSITORY https://github.com/eigenstate-solutions/lock_align.git
-  GIT_TAG <tag>)
+  GIT_TAG v0.8.20261013)
 FetchContent_MakeAvailable(lock_align)
 
 target_link_libraries(your_target PRIVATE lock_align::lock_align)
@@ -125,7 +125,7 @@ cmake --install build --prefix /where/to/install
 ```
 
 ```cmake
-find_package(lock_align 0.1 REQUIRED)
+find_package(lock_align 0.8 REQUIRED)
 target_link_libraries(your_target PRIVATE lock_align::lock_align)
 ```
 

@@ -2,7 +2,7 @@
 # examples need 3.24, which cmake/lock_align_dev.cmake checks. The upper end
 # keeps the policies at 3.24's wherever CMake is new enough to have them.
 cmake_minimum_required(VERSION 3.21...3.24)
-project(lock_align VERSION 0.1.0 LANGUAGES CXX)
+project(lock_align VERSION 0.8.20261013 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
