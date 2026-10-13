@@ -4,7 +4,9 @@
 name: CI
 
 on:
+  # Branches only: a tag names a commit its branch's push already tested.
   push:
+    branches: ['**']
   pull_request:
   workflow_dispatch:
 
