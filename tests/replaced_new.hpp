@@ -25,6 +25,18 @@ inline constexpr bool replaced_new = true;
 #endif
 inline constexpr const char* no_replaced_new = "a sanitizer replaces operator new itself";
 
+// Whether an empty std::string allocates nothing. MSVC's debug containers
+// (_ITERATOR_DEBUG_LEVEL above 0) allocate bookkeeping of their own, even
+// when empty, so a test that counts what a resource's name costs skips there:
+//   if (!exact_allocations) SKIP(inexact_allocations);
+#if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
+inline constexpr bool exact_allocations = false;
+#else
+inline constexpr bool exact_allocations = true;
+#endif
+inline constexpr const char* inexact_allocations =
+    "MSVC's debug containers allocate bookkeeping of their own";
+
 // Every allocation through operator new or new[] in this program.
 inline std::atomic<long> allocations{0};
 // Makes the next allocation throw std::bad_alloc.

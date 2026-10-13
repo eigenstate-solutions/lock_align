@@ -88,6 +88,7 @@ TEST_CASE("a promise allocates no more than std::promise", "[disabled]") {
 TEST_CASE("names are neither built nor stored", "[disabled]") {
   if (!replaced_new) SKIP(no_replaced_new);
   bool names_empty = false;
+  long allocated = 0;
   const long before = allocations.load();
   {
     ordered_mutex<std::mutex, 1> unnamed_mutex;
@@ -98,10 +99,12 @@ TEST_CASE("names are neither built nor stored", "[disabled]") {
     task_scope<> named_task("a task name too long for any small string");
     ordered_latch unnamed_latch(1, 1);
     ordered_latch named_latch(1, 1, "a latch name too long for any small string");
+    // Counted before name() is called: the strings it returns are the test's,
+    // and MSVC's debug containers allocate even for an empty one.
+    allocated = allocations.load() - before;
     names_empty = named_mutex.name().empty() && named_duty.name().empty() &&
                   named_task.name().empty();
   }
-  const long allocated = allocations.load() - before;
   CHECK(allocated == 0);
   CHECK(names_empty);
 }

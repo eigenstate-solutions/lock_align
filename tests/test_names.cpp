@@ -25,6 +25,7 @@ using namespace lock_align_test;
 
 TEST_CASE("resources with default names don't allocate", "[names]") {
   if (!replaced_new) SKIP(no_replaced_new);
+  if (!exact_allocations) SKIP(inexact_allocations);
   // libc++'s std::condition_variable_any allocates; that isn't ours.
   long baseline = allocations;
   { std::condition_variable_any plain; }
@@ -47,6 +48,7 @@ TEST_CASE("resources with default names don't allocate", "[names]") {
 
 TEST_CASE("a promise allocates no more than std::promise", "[names][promise]") {
   if (!replaced_new) SKIP(no_replaced_new);
+  if (!exact_allocations) SKIP(inexact_allocations);
   long baseline = allocations;
   { std::promise<int> plain; }
   baseline = allocations - baseline;
