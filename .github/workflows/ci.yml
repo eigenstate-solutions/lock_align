@@ -1,0 +1,72 @@
+# Builds lock_align's tests and examples and runs them with ctest, on each
+# compiler family and under each sanitizer. Everything a job needs comes from
+# CMake and the compiler; Catch2 is downloaded by the build.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request replaces a running check.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: GCC 14 Debug, os: ubuntu-24.04, cxx: g++-14, config: Debug }
+          - { name: GCC 14 Release, os: ubuntu-24.04, cxx: g++-14, config: Release }
+          - { name: GCC 14 ASan and UBSan, os: ubuntu-24.04, cxx: g++-14, config: Debug,
+              sanitize: "address;undefined" }
+          - { name: GCC 14 TSan, os: ubuntu-24.04, cxx: g++-14, config: Debug, sanitize: thread }
+          - { name: Clang 18 Debug, os: ubuntu-24.04, cxx: clang++-18, config: Debug }
+          - { name: Clang 18 Release, os: ubuntu-24.04, cxx: clang++-18, config: Release }
+          - { name: Clang 18 ASan and UBSan, os: ubuntu-24.04, cxx: clang++-18, config: Debug,
+              sanitize: "address;undefined" }
+          - { name: Clang 18 TSan, os: ubuntu-24.04, cxx: clang++-18, config: Debug,
+              sanitize: thread }
+          - { name: Apple Clang Debug, os: macos-latest, config: Debug }
+          - { name: MSVC Debug, os: windows-latest, config: Debug }
+          - { name: MSVC Release, os: windows-latest, config: Release }
+          - { name: clang-cl Debug, os: windows-latest, config: Debug, toolset: ClangCL }
+    env:
+      CONFIG: ${{ matrix.config }}
+      CXX_COMPILER: ${{ matrix.cxx }}
+      SANITIZE: ${{ matrix.sanitize }}
+      TOOLSET: ${{ matrix.toolset }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The runners' kernels randomize addresses more than the sanitizers'
+      # memory layouts allow, which makes them fail at startup.
+      - name: Make room for the sanitizers
+        if: runner.os == 'Linux' && matrix.sanitize != ''
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Configure
+        run: |
+          args=(-S . -B build -DCMAKE_BUILD_TYPE="$CONFIG")
+          if [ -n "$CXX_COMPILER" ]; then args+=(-DCMAKE_CXX_COMPILER="$CXX_COMPILER"); fi
+          if [ -n "$SANITIZE" ]; then args+=(-DLOCK_ALIGN_SANITIZE="$SANITIZE"); fi
+          if [ -n "$TOOLSET" ]; then args+=(-T "$TOOLSET"); fi
+          cmake "${args[@]}"
+
+      - name: Build
+        run: cmake --build build --config "$CONFIG" --parallel 4
+
+      - name: Test
+        run: ctest --test-dir build -C "$CONFIG" --output-on-failure --parallel 4
