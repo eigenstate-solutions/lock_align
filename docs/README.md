@@ -70,6 +70,12 @@ with the rest of the project, or on its own with one compiler command.
 | [Waiting on threads](examples/waiting_on_threads.md) | Latches and promises, including two threads that each wait for the other |
 | [Custom policy](examples/custom_policy.md) | A policy that records every violation and reports them at the end |
 
+For an existing program converted to lock_align, see
+[lock_align-example-Concurrent-RaceSimulator](https://github.com/eigenstate-solutions/lock_align-example-Concurrent-RaceSimulator),
+a fork of [parakhkavin/Concurrent-RaceSimulator](https://github.com/parakhkavin/Concurrent-RaceSimulator).
+It is a race simulation, written by someone else, in which racer threads are
+coordinated by a game master using mutexes and condition variables.
+
 ## Using it in a CMake project
 
 With CMake 3.21 or newer:
