@@ -1,0 +1,9 @@
+# CMake build directories
+/build/
+/build-*/
+
+# Big files
+/images/LockAlign-Logo.xcf
+
+# Local review notes
+/REVIEW.md
